@@ -2,7 +2,7 @@ package transformer
 
 import "strings"
 
-// based of off https://github.com/davidcallanan/py-myopl-code/blob/master/ep14/strings_with_arrows.py
+// based off of https://github.com/davidcallanan/py-myopl-code/blob/master/ep14/strings_with_arrows.py
 func StringsWithArrows(text string, bounds Bounds, linePrefix string) string {
 	result := ""
 

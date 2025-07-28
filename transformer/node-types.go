@@ -93,11 +93,11 @@ func (a *ArgListNode) Marshal() {
 }
 
 func (*ArgListNode) KindName() string {
-	return "arg-list"
+	return "argList"
 }
 
 func (a *ArgListNode) String() string {
-	return fmt.Sprintf("(arglist: %v)", a.Arguments)
+	return fmt.Sprintf("(arg-list: %v)", a.Arguments)
 }
 
 type CallNode struct {
@@ -201,7 +201,7 @@ type AttributeAccessNode struct {
 }
 
 func (*AttributeAccessNode) KindName() string {
-	return "attr-access"
+	return "attrAccess"
 }
 
 func (a *AttributeAccessNode) Marshal() {
@@ -221,7 +221,7 @@ type IndexAccessNode struct {
 }
 
 func (*IndexAccessNode) KindName() string {
-	return "attr-access"
+	return "attrAccess"
 }
 
 func (i *IndexAccessNode) Marshal() {
@@ -232,4 +232,64 @@ func (i *IndexAccessNode) Marshal() {
 
 func (i *IndexAccessNode) String() string {
 	return fmt.Sprintf("(index-access value: %v, index: %v)", i.Value, i.Index)
+}
+
+type SpreadNode struct {
+	NodeTraits
+	Value Node `json:"value"`
+}
+
+func (*SpreadNode) KindName() string {
+	return "spread"
+}
+
+func (s *SpreadNode) Marshal() {
+	SetKind(s)
+	s.Value.Marshal()
+}
+
+func (s *SpreadNode) String() string {
+	return fmt.Sprintf("(spread %v)", s.Value)
+}
+
+type VariableAssignmentNode struct {
+	NodeTraits
+	Variable Node `json:"variable"` // SymbolNode, AttributeAccessNode or IndexAccessNode
+	Value    Node `json:"value"`
+}
+
+func (*VariableAssignmentNode) KindName() string {
+	return "variableAssignment"
+}
+
+func (v *VariableAssignmentNode) Marshal() {
+	SetKind(v)
+	v.Variable.Marshal()
+	v.Value.Marshal()
+}
+
+func (v *VariableAssignmentNode) String() string {
+	return fmt.Sprintf("(var-assignment var: %v, value: %v)", v.Variable, v.Value)
+}
+
+type VariableListAssignmentNode struct {
+	NodeTraits
+	Variables []Node `json:"variables"` // SymbolNode, AttributeAccessNode or IndexAccessNode
+	Value     Node   `json:"value"`
+}
+
+func (*VariableListAssignmentNode) KindName() string {
+	return "variableListAssignment"
+}
+
+func (v *VariableListAssignmentNode) Marshal() {
+	SetKind(v)
+	for _, variable := range v.Variables {
+		variable.Marshal()
+	}
+	v.Value.Marshal()
+}
+
+func (v *VariableListAssignmentNode) String() string {
+	return fmt.Sprintf("(var-list-assignment var: %v, value: %v)", v.Variables, v.Value)
 }

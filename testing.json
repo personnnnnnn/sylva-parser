@@ -3,10 +3,10 @@
   "meta": {
     "source": "testing.sylva",
     "errors": [],
-    "error-strings": []
+    "errorStrings": []
   },
   "ast": {
-    "kind": "attr-access",
+    "kind": "variableListAssignment",
     "bounds": {
       "start": {
         "col": 0,
@@ -14,28 +14,14 @@
         "idx": 0
       },
       "end": {
-        "col": 5,
+        "col": 17,
         "ln": 0,
-        "idx": 5
+        "idx": 17
       }
     },
     "errors": [],
-    "value": {
-      "kind": "attr-access",
-      "bounds": {
-        "start": {
-          "col": 0,
-          "ln": 0,
-          "idx": 0
-        },
-        "end": {
-          "col": 3,
-          "ln": 0,
-          "idx": 3
-        }
-      },
-      "errors": [],
-      "value": {
+    "variables": [
+      {
         "kind": "symbol",
         "bounds": {
           "start": {
@@ -52,40 +38,57 @@
         "errors": [],
         "symbol": "x"
       },
-      "attribute": {
+      {
         "kind": "symbol",
         "bounds": {
           "start": {
-            "col": 2,
-            "ln": 0,
-            "idx": 2
-          },
-          "end": {
             "col": 3,
             "ln": 0,
             "idx": 3
+          },
+          "end": {
+            "col": 4,
+            "ln": 0,
+            "idx": 4
           }
         },
         "errors": [],
         "symbol": "y"
+      },
+      {
+        "kind": "symbol",
+        "bounds": {
+          "start": {
+            "col": 6,
+            "ln": 0,
+            "idx": 6
+          },
+          "end": {
+            "col": 7,
+            "ln": 0,
+            "idx": 7
+          }
+        },
+        "errors": [],
+        "symbol": "z"
       }
-    },
-    "attribute": {
+    ],
+    "value": {
       "kind": "symbol",
       "bounds": {
         "start": {
-          "col": 4,
+          "col": 10,
           "ln": 0,
-          "idx": 4
+          "idx": 10
         },
         "end": {
-          "col": 5,
+          "col": 17,
           "ln": 0,
-          "idx": 5
+          "idx": 17
         }
       },
       "errors": [],
-      "symbol": "z"
+      "symbol": "myArray"
     }
   }
 }

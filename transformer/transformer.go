@@ -8,7 +8,7 @@ import (
 type Metadata struct {
 	Source       string        `json:"source"`
 	Errors       []*SylvaError `json:"errors"`
-	ErrorStrings []string      `json:"error-strings"`
+	ErrorStrings []string      `json:"errorStrings"`
 }
 
 type ProgramData struct {
