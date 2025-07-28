@@ -1,0 +1,91 @@
+{
+  "successful": true,
+  "meta": {
+    "source": "testing.sylva",
+    "errors": [],
+    "error-strings": []
+  },
+  "ast": {
+    "kind": "attr-access",
+    "bounds": {
+      "start": {
+        "col": 0,
+        "ln": 0,
+        "idx": 0
+      },
+      "end": {
+        "col": 5,
+        "ln": 0,
+        "idx": 5
+      }
+    },
+    "errors": [],
+    "value": {
+      "kind": "attr-access",
+      "bounds": {
+        "start": {
+          "col": 0,
+          "ln": 0,
+          "idx": 0
+        },
+        "end": {
+          "col": 3,
+          "ln": 0,
+          "idx": 3
+        }
+      },
+      "errors": [],
+      "value": {
+        "kind": "symbol",
+        "bounds": {
+          "start": {
+            "col": 0,
+            "ln": 0,
+            "idx": 0
+          },
+          "end": {
+            "col": 1,
+            "ln": 0,
+            "idx": 1
+          }
+        },
+        "errors": [],
+        "symbol": "x"
+      },
+      "attribute": {
+        "kind": "symbol",
+        "bounds": {
+          "start": {
+            "col": 2,
+            "ln": 0,
+            "idx": 2
+          },
+          "end": {
+            "col": 3,
+            "ln": 0,
+            "idx": 3
+          }
+        },
+        "errors": [],
+        "symbol": "y"
+      }
+    },
+    "attribute": {
+      "kind": "symbol",
+      "bounds": {
+        "start": {
+          "col": 4,
+          "ln": 0,
+          "idx": 4
+        },
+        "end": {
+          "col": 5,
+          "ln": 0,
+          "idx": 5
+        }
+      },
+      "errors": [],
+      "symbol": "z"
+    }
+  }
+}
