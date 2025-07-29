@@ -37,7 +37,7 @@ func MakeParser(tokens []*Token) *Parser {
 }
 
 func (p *Parser) Parse() Node {
-	root := p.Statement()
+	root := p.RawBlock(GlobalContext, func() bool { return false })
 	p.Errors = root.GetErrors()
 
 	endToken := p.GetToken()
@@ -53,6 +53,370 @@ func (p *Parser) Parse() Node {
 	}
 
 	return root
+}
+
+func (p *Parser) Block(ctx Context) Node {
+	if p.Token().Type != TT_LCurly {
+		return ErrNode(p.Token().Bounds, "parse error", "expected '{'")
+	}
+
+	start := p.Token().Bounds.Start
+	p.Step()
+
+	block := p.RawBlock(ctx, func() bool {
+		return p.Token().Type == TT_RCurly
+	})
+
+	end := p.Token().Bounds.End
+	if p.Token().Type != TT_RCurly {
+		block.AppendError(&SylvaError{
+			Bounds:  p.Token().Bounds,
+			Type:    "parse error",
+			Message: "unexpected EOF (perhaps you forgot a '}' somewhere?)",
+		})
+	} else {
+		p.Step()
+	}
+
+	block.SetBounds(MakeBounds(start, end))
+
+	return block
+}
+
+func (p *Parser) RawBlock(ctx Context, ending func() bool) Node {
+	startingPos := p.Token().Bounds.Start
+	statements := []Node{}
+	node := &BlockNode{}
+	node.ContextTypeStrings = ctx.Representation()
+
+	for !ending() && p.Token().Type != TT_EOF {
+		statement := p.Statement(ctx)
+		statements = append(statements, statement)
+		node.AppendErrors(statement)
+	}
+
+	if len(statements) == 0 {
+		node.Bounds = MakeBounds(startingPos, startingPos)
+	} else {
+		node.Bounds = MakeBounds(statements[0].GetBounds().Start, statements[len(statements)-1].GetBounds().End)
+	}
+
+	node.Statements = statements
+
+	return node
+}
+
+func (p *Parser) Statement(ctx Context) Node {
+	oldIndex := p.TokenIndex
+
+	token := p.Token()
+
+	if token.Type == TT_Pub {
+		node := p.PublicDefinition()
+		if !ctx.Matches(GlobalContext) {
+			node.AppendError(&SylvaError{
+				Bounds:  node.GetBounds(),
+				Type:    "program error",
+				Message: "cannot have 'pub' declaration outside of global context",
+			})
+		}
+		return node
+	}
+
+	if token.Type == TT_Let {
+		return p.Definition()
+	}
+
+	// a simple symbol or a function call (like 'print("Hi :)")')
+	// might get confused as a VariableAssignment ('print = 0')
+	// but, in that case (where there is no "=" after the symbol)
+	// it will return an ErrorNode
+	varAssignment := p.VariableAssignment()
+	if _, ok := varAssignment.(*ErrorNode); !ok {
+		return varAssignment
+	} else {
+		p.TokenIndex = oldIndex
+		varListAssignment := p.VariableListAssignment()
+		if _, ok := varListAssignment.(*ErrorNode); !ok {
+			return varListAssignment
+		}
+	}
+
+	p.TokenIndex = oldIndex
+	return p.Expr()
+}
+
+func (p *Parser) PublicDefinition() Node {
+	pubToken := p.Token()
+	if pubToken.Type != TT_Pub {
+		return ErrNode(pubToken.Bounds, "parse error", "expected 'pub'")
+	}
+	p.Step()
+
+	next := p.Token()
+
+	if next.Type == TT_Let {
+		node := &PublicDefinitionNode{}
+		def := p.Definition()
+		node.Definition = def
+		node.Bounds.Start = pubToken.Bounds.Start
+		node.Bounds.End = def.GetBounds().End
+		return node
+	}
+
+	// TODO: change when adding support for functions
+	return ErrNode(next.Bounds, "parse error", "expected 'let'")
+}
+
+func (p *Parser) Definition() Node {
+	oldIndex := p.TokenIndex
+	token := p.Token()
+	if token.Type == TT_Let {
+		varListDef := p.VariableListDefinition()
+		if _, ok := varListDef.(*ErrorNode); !ok {
+			return varListDef
+		}
+		p.TokenIndex = oldIndex
+		return p.VariableDefinition()
+	}
+
+	return ErrNode(token.Bounds, "parse error", "expected 'let'")
+}
+
+func (p *Parser) VariableAssignment() Node {
+	node := &VariableAssignmentNode{}
+	variable := p.Variable()
+	node.Variable = variable
+	node.AppendErrors(node)
+
+	eqToken := p.GetToken()
+	if eqToken.Type != TT_EqSign {
+		return ErrNode(
+			eqToken.Bounds,
+			"parse error",
+			"expected '='",
+		)
+	}
+
+	expr := p.Expr()
+	node.Value = expr
+	node.AppendErrors(expr)
+
+	node.Bounds.Start = variable.GetBounds().Start
+	node.Bounds.End = expr.GetBounds().End
+
+	return node
+}
+
+func (p *Parser) VariableListAssignment() Node {
+	node := &VariableListAssignmentNode{}
+	variables := []Node{}
+	variable := p.Variable()
+	variables = append(variables, variable)
+	node.AppendErrors(variable)
+
+	for {
+		comma := p.Token()
+		if comma.Type == TT_EqSign {
+			break
+		}
+		if comma.Type != TT_Comma {
+			return ErrNode(
+				comma.Bounds,
+				"parse error",
+				"expected ','",
+			)
+		}
+		p.Step()
+		variable := p.Variable()
+		variables = append(variables, variable)
+		node.AppendErrors(variable)
+	}
+
+	p.Step()
+
+	expr := p.Expr()
+	node.Value = expr
+	node.Variables = variables
+
+	node.AppendErrors(expr)
+
+	node.Bounds.Start = variable.GetBounds().Start
+	node.Bounds.End = expr.GetBounds().End
+
+	return node
+}
+
+func (p *Parser) VariableDefinition() Node {
+	letToken := p.Token()
+	if letToken.Type != TT_Let {
+		return ErrNode(letToken.Bounds, "parse error", "expected 'let'")
+	}
+	p.Step()
+
+	node := &VariableDefinitionNode{}
+	symbolToken := p.Token()
+
+	var variable *SymbolNode
+	if symbolToken.Type != TT_Symbol {
+		variable = &SymbolNode{
+			NodeTraits: NodeTraits{
+				Bounds: symbolToken.Bounds,
+				Errors: []*SylvaError{
+					{
+						Bounds:  symbolToken.Bounds,
+						Type:    "parse error",
+						Message: "expected symbol",
+					},
+				},
+			},
+			Symbol: "<NONE>",
+		}
+	} else {
+		variable = p.Symbol().(*SymbolNode)
+	}
+
+	node.Variable = variable
+	node.AppendErrors(node)
+
+	eqToken := p.GetToken()
+	if eqToken.Type != TT_EqSign {
+		return ErrNode(
+			eqToken.Bounds,
+			"parse error",
+			"expected '='",
+		)
+	}
+
+	expr := p.Expr()
+	node.Value = expr
+	node.AppendErrors(expr)
+
+	node.Bounds.Start = letToken.Bounds.Start
+	node.Bounds.End = expr.GetBounds().End
+
+	return node
+}
+
+func (p *Parser) VariableListDefinition() Node {
+	letToken := p.Token()
+	if letToken.Type != TT_Let {
+		return ErrNode(letToken.Bounds, "parse error", "expected 'let'")
+	}
+	p.Step()
+
+	variables := []*SymbolNode{}
+
+	symbolToken := p.Token()
+	var variable *SymbolNode
+	if symbolToken.Type != TT_Symbol {
+		variable = &SymbolNode{
+			NodeTraits: NodeTraits{
+				Bounds: symbolToken.Bounds,
+				Errors: []*SylvaError{
+					{
+						Bounds:  symbolToken.Bounds,
+						Type:    "parse error",
+						Message: "expected symbol",
+					},
+				},
+			},
+			Symbol: "<NONE>",
+		}
+	} else {
+		variable = p.Symbol().(*SymbolNode)
+	}
+
+	variables = append(variables, variable)
+
+	expectValue := false
+	for {
+		comma := p.Token()
+		if comma.Type == TT_EqSign {
+			expectValue = true
+			break
+		}
+		if comma.Type != TT_Comma {
+			break
+		}
+		p.Step()
+
+		symbolToken := p.Token()
+		var variable *SymbolNode
+		if symbolToken.Type != TT_Symbol {
+			variable = &SymbolNode{
+				NodeTraits: NodeTraits{
+					Bounds: symbolToken.Bounds,
+					Errors: []*SylvaError{
+						{
+							Bounds:  symbolToken.Bounds,
+							Type:    "parse error",
+							Message: "expected symbol",
+						},
+					},
+				},
+				Symbol: "<NONE>",
+			}
+		} else {
+			variable = p.Symbol().(*SymbolNode)
+		}
+
+		variables = append(variables, variable)
+	}
+
+	if expectValue {
+		p.Step()
+
+		node := &VariableListDefinitionNode{}
+
+		expr := p.Expr()
+		node.Value = expr
+		node.Variables = variables
+
+		for _, variable := range node.Variables {
+			node.AppendErrors(variable)
+		}
+
+		node.AppendErrors(expr)
+
+		node.Bounds.Start = letToken.Bounds.Start
+		node.Bounds.End = expr.GetBounds().End
+		if len(variables) == 1 {
+			return ErrNode(node.Bounds, "parse error", "expected 2 or more variables for a list definition")
+		}
+
+		return node
+	}
+
+	node := &VariableDeclarationNode{}
+
+	node.Variables = variables
+	for _, variable := range node.Variables {
+		node.AppendErrors(variable)
+	}
+
+	node.Bounds.Start = letToken.Bounds.Start
+	node.Bounds.End = variables[len(variables)-1].Bounds.End
+
+	return node
+}
+
+func (p *Parser) Variable() Node {
+	oldIndex := p.TokenIndex
+
+	variable := p.Literal()
+	switch variable.(type) {
+	case *SymbolNode, *IndexAccessNode, *AttributeAccessNode:
+		return variable
+	}
+
+	p.TokenIndex = oldIndex
+	token := p.GetToken()
+	return ErrNode(
+		token.Bounds,
+		"parse error",
+		"expected variable",
+	)
 }
 
 func (p *Parser) Int() Node {
@@ -123,6 +487,20 @@ func (p *Parser) Symbol() Node {
 			Errors: nil,
 		},
 		Symbol: token.Value.(string),
+	}
+}
+
+func (p *Parser) StringNode() Node {
+	token := p.GetToken()
+	if token.Type != TT_String {
+		return ErrNode(token.Bounds, "parse error", "expected string")
+	}
+	return &StringNode{
+		NodeTraits: NodeTraits{
+			Bounds: token.Bounds,
+			Errors: nil,
+		},
+		Text: token.Value.(string),
 	}
 }
 
@@ -429,20 +807,6 @@ func (p *Parser) Call() Node {
 	return left
 }
 
-func (p *Parser) StringNode() Node {
-	token := p.GetToken()
-	if token.Type != TT_String {
-		return ErrNode(token.Bounds, "parse error", "expected string")
-	}
-	return &StringNode{
-		NodeTraits: NodeTraits{
-			Bounds: token.Bounds,
-			Errors: nil,
-		},
-		Text: token.Value.(string),
-	}
-}
-
 func (p *Parser) Value() Node {
 	unaryOp, err := TTtoUnaryOperator(p.Token().Type)
 	if err != nil {
@@ -464,272 +828,4 @@ func (p *Parser) Value() Node {
 	node.AppendErrors(value)
 
 	return node
-}
-
-func (p *Parser) Variable() Node {
-	oldIndex := p.TokenIndex
-
-	variable := p.Literal()
-	switch variable.(type) {
-	case *SymbolNode, *IndexAccessNode, *AttributeAccessNode:
-		return variable
-	}
-
-	p.TokenIndex = oldIndex
-	token := p.GetToken()
-	return ErrNode(
-		token.Bounds,
-		"parse error",
-		"expected variable",
-	)
-}
-
-func (p *Parser) VariableAssignment() Node {
-	node := &VariableAssignmentNode{}
-	variable := p.Variable()
-	node.Variable = variable
-	node.AppendErrors(node)
-
-	eqToken := p.GetToken()
-	if eqToken.Type != TT_EqSign {
-		return ErrNode(
-			eqToken.Bounds,
-			"parse error",
-			"expected '='",
-		)
-	}
-
-	expr := p.Expr()
-	node.Value = expr
-	node.AppendErrors(expr)
-
-	node.Bounds.Start = variable.GetBounds().Start
-	node.Bounds.End = expr.GetBounds().End
-
-	return node
-}
-
-func (p *Parser) VariableListAssignment() Node {
-	node := &VariableListAssignmentNode{}
-	variables := []Node{}
-	variable := p.Variable()
-	variables = append(variables, variable)
-	node.AppendErrors(variable)
-
-	for {
-		comma := p.Token()
-		if comma.Type == TT_EqSign {
-			break
-		}
-		if comma.Type != TT_Comma {
-			return ErrNode(
-				comma.Bounds,
-				"parse error",
-				"expected ','",
-			)
-		}
-		p.Step()
-		variable := p.Variable()
-		variables = append(variables, variable)
-		node.AppendErrors(variable)
-	}
-
-	p.Step()
-
-	expr := p.Expr()
-	node.Value = expr
-	node.Variables = variables
-
-	node.AppendErrors(expr)
-
-	node.Bounds.Start = variable.GetBounds().Start
-	node.Bounds.End = expr.GetBounds().End
-
-	return node
-}
-
-func (p *Parser) VariableDefinition() Node {
-	letToken := p.Token()
-	if letToken.Type != TT_Let {
-		return ErrNode(letToken.Bounds, "parse error", "expected 'let'")
-	}
-	p.Step()
-
-	node := &VariableDefinitionNode{}
-	symbolToken := p.Token()
-
-	var variable *SymbolNode
-	if symbolToken.Type != TT_Symbol {
-		variable = &SymbolNode{
-			NodeTraits: NodeTraits{
-				Bounds: symbolToken.Bounds,
-				Errors: []*SylvaError{
-					{
-						Bounds:  symbolToken.Bounds,
-						Type:    "parse error",
-						Message: "expected symbol",
-					},
-				},
-			},
-			Symbol: "<NONE>",
-		}
-	} else {
-		variable = p.Symbol().(*SymbolNode)
-	}
-
-	node.Variable = variable
-	node.AppendErrors(node)
-
-	eqToken := p.GetToken()
-	if eqToken.Type != TT_EqSign {
-		return ErrNode(
-			eqToken.Bounds,
-			"parse error",
-			"expected '='",
-		)
-	}
-
-	expr := p.Expr()
-	node.Value = expr
-	node.AppendErrors(expr)
-
-	node.Bounds.Start = letToken.Bounds.Start
-	node.Bounds.End = expr.GetBounds().End
-
-	return node
-}
-
-func (p *Parser) VariableListDefinition() Node {
-	letToken := p.Token()
-	if letToken.Type != TT_Let {
-		return ErrNode(letToken.Bounds, "parse error", "expected 'let'")
-	}
-	p.Step()
-
-	variables := []*SymbolNode{}
-
-	symbolToken := p.Token()
-	var variable *SymbolNode
-	if symbolToken.Type != TT_Symbol {
-		variable = &SymbolNode{
-			NodeTraits: NodeTraits{
-				Bounds: symbolToken.Bounds,
-				Errors: []*SylvaError{
-					{
-						Bounds:  symbolToken.Bounds,
-						Type:    "parse error",
-						Message: "expected symbol",
-					},
-				},
-			},
-			Symbol: "<NONE>",
-		}
-	} else {
-		variable = p.Symbol().(*SymbolNode)
-	}
-
-	variables = append(variables, variable)
-
-	expectValue := false
-	for {
-		comma := p.Token()
-		if comma.Type == TT_EqSign {
-			expectValue = true
-			break
-		}
-		if comma.Type != TT_Comma {
-			break
-		}
-		p.Step()
-
-		symbolToken := p.Token()
-		var variable *SymbolNode
-		if symbolToken.Type != TT_Symbol {
-			variable = &SymbolNode{
-				NodeTraits: NodeTraits{
-					Bounds: symbolToken.Bounds,
-					Errors: []*SylvaError{
-						{
-							Bounds:  symbolToken.Bounds,
-							Type:    "parse error",
-							Message: "expected symbol",
-						},
-					},
-				},
-				Symbol: "<NONE>",
-			}
-		} else {
-			variable = p.Symbol().(*SymbolNode)
-		}
-
-		variables = append(variables, variable)
-	}
-
-	if expectValue {
-		p.Step()
-
-		node := &VariableListDefinitionNode{}
-
-		expr := p.Expr()
-		node.Value = expr
-		node.Variables = variables
-
-		for _, variable := range node.Variables {
-			node.AppendErrors(variable)
-		}
-
-		node.AppendErrors(expr)
-
-		node.Bounds.Start = letToken.Bounds.Start
-		node.Bounds.End = expr.GetBounds().End
-		if len(variables) == 1 {
-			return ErrNode(node.Bounds, "parse error", "expected 2 or more variables for a list definition")
-		}
-
-		return node
-	}
-
-	node := &VariableDeclarationNode{}
-
-	node.Variables = variables
-	for _, variable := range node.Variables {
-		node.AppendErrors(variable)
-	}
-
-	node.Bounds.Start = letToken.Bounds.Start
-	node.Bounds.End = variables[len(variables)-1].Bounds.End
-
-	return node
-}
-
-func (p *Parser) Statement() Node {
-	oldIndex := p.TokenIndex
-
-	token := p.Token()
-	if token.Type == TT_Let {
-		varListDef := p.VariableListDefinition()
-		if _, ok := varListDef.(*ErrorNode); !ok {
-			return varListDef
-		}
-		p.TokenIndex = oldIndex
-		return p.VariableDefinition()
-	}
-
-	// a simple symbol or a function call (like 'print("Hi :)")')
-	// might get confused as a VariableAssignment ('print = 0')
-	// but, in that case (where there is no "=" after the symbol)
-	// it will return an ErrorNode
-	varAssignment := p.VariableAssignment()
-	if _, ok := varAssignment.(*ErrorNode); !ok {
-		return varAssignment
-	} else {
-		p.TokenIndex = oldIndex
-		varListAssignment := p.VariableListAssignment()
-		if _, ok := varListAssignment.(*ErrorNode); !ok {
-			return varListAssignment
-		}
-	}
-
-	p.TokenIndex = oldIndex
-	return p.Expr()
 }

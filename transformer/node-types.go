@@ -21,26 +21,18 @@ func ErrNode(bounds Bounds, type_ string, msg string) *ErrorNode {
 	}
 }
 
-func (*ErrorNode) KindName() string {
-	return "error"
-}
+func (*ErrorNode) KindName() string { return "error" }
 
-func (e *ErrorNode) Marshal() {
-	SetKind(e)
-}
+func (e *ErrorNode) Marshal() { SetKind(e) }
 
 type IntNode struct {
 	NodeTraits
 	Number int64 `json:"number"`
 }
 
-func (i *IntNode) Marshal() {
-	SetKind(i)
-}
+func (i *IntNode) Marshal() { SetKind(i) }
 
-func (*IntNode) KindName() string {
-	return "int"
-}
+func (*IntNode) KindName() string { return "int" }
 
 func (i *IntNode) String() string {
 	return fmt.Sprintf("(int %v)", i.Number)
@@ -51,13 +43,9 @@ type FloatNode struct {
 	Number float64 `json:"number"`
 }
 
-func (f *FloatNode) Marshal() {
-	SetKind(f)
-}
+func (f *FloatNode) Marshal() { SetKind(f) }
 
-func (*FloatNode) KindName() string {
-	return "float"
-}
+func (*FloatNode) KindName() string { return "float" }
 
 func (i *FloatNode) String() string {
 	return fmt.Sprintf("(float %v)", i.Number)
@@ -68,13 +56,9 @@ type SymbolNode struct {
 	Symbol string `json:"symbol"`
 }
 
-func (s *SymbolNode) Marshal() {
-	SetKind(s)
-}
+func (s *SymbolNode) Marshal() { SetKind(s) }
 
-func (*SymbolNode) KindName() string {
-	return "symbol"
-}
+func (*SymbolNode) KindName() string { return "symbol" }
 
 func (s *SymbolNode) String() string {
 	return fmt.Sprintf("(symbol: %v)", s.Symbol)
@@ -92,9 +76,7 @@ func (a *ArgListNode) Marshal() {
 	}
 }
 
-func (*ArgListNode) KindName() string {
-	return "argList"
-}
+func (*ArgListNode) KindName() string { return "argList" }
 
 func (a *ArgListNode) String() string {
 	return fmt.Sprintf("(arg-list: %v)", a.Arguments)
@@ -112,9 +94,7 @@ func (c *CallNode) Marshal() {
 	c.Arguments.Marshal()
 }
 
-func (*CallNode) KindName() string {
-	return "call"
-}
+func (*CallNode) KindName() string { return "call" }
 
 func (c *CallNode) String() string {
 	return fmt.Sprintf("(call kind: %v, fn: %v, args: %v)", c.Kind, c.Function, c.Arguments)
@@ -133,9 +113,7 @@ func (b *BinOpExpr) Marshal() {
 	b.Right.Marshal()
 }
 
-func (*BinOpExpr) KindName() string {
-	return "binop"
-}
+func (*BinOpExpr) KindName() string { return "binop" }
 
 func (b *BinOpExpr) String() string {
 	return fmt.Sprintf("(kind: %v, op: %v, left: %v, right: %v)", b.Kind, b.Op, b.Left, b.Right)
@@ -146,13 +124,9 @@ type BoolNode struct {
 	Bool bool `json:"bool"`
 }
 
-func (*BoolNode) KindName() string {
-	return "bool"
-}
+func (*BoolNode) KindName() string { return "bool" }
 
-func (b *BoolNode) Marshal() {
-	SetKind(b)
-}
+func (b *BoolNode) Marshal() { SetKind(b) }
 
 func (b *BoolNode) String() string {
 	return fmt.Sprintf("(bool: %v)", b.Bool)
@@ -163,13 +137,9 @@ type StringNode struct {
 	Text string `json:"text"`
 }
 
-func (*StringNode) KindName() string {
-	return "string"
-}
+func (*StringNode) KindName() string { return "string" }
 
-func (s *StringNode) Marshal() {
-	SetKind(s)
-}
+func (s *StringNode) Marshal() { SetKind(s) }
 
 func (s *StringNode) String() string {
 	return fmt.Sprintf("(string: %v)", s.Text)
@@ -181,9 +151,7 @@ type UnaryOpNode struct {
 	Value Node          `json:"value"`
 }
 
-func (*UnaryOpNode) KindName() string {
-	return "unaryop"
-}
+func (*UnaryOpNode) KindName() string { return "unaryop" }
 
 func (u *UnaryOpNode) Marshal() {
 	SetKind(u)
@@ -200,9 +168,7 @@ type AttributeAccessNode struct {
 	Attribute *SymbolNode `json:"attribute"`
 }
 
-func (*AttributeAccessNode) KindName() string {
-	return "attrAccess"
-}
+func (*AttributeAccessNode) KindName() string { return "attrAccess" }
 
 func (a *AttributeAccessNode) Marshal() {
 	SetKind(a)
@@ -220,9 +186,7 @@ type IndexAccessNode struct {
 	Index Node `json:"index"`
 }
 
-func (*IndexAccessNode) KindName() string {
-	return "attrAccess"
-}
+func (*IndexAccessNode) KindName() string { return "attrAccess" }
 
 func (i *IndexAccessNode) Marshal() {
 	SetKind(i)
@@ -239,9 +203,7 @@ type SpreadNode struct {
 	Value Node `json:"value"`
 }
 
-func (*SpreadNode) KindName() string {
-	return "spread"
-}
+func (*SpreadNode) KindName() string { return "spread" }
 
 func (s *SpreadNode) Marshal() {
 	SetKind(s)
@@ -258,9 +220,7 @@ type VariableAssignmentNode struct {
 	Value    Node `json:"value"`
 }
 
-func (*VariableAssignmentNode) KindName() string {
-	return "variableAssignment"
-}
+func (*VariableAssignmentNode) KindName() string { return "variableAssignment" }
 
 func (v *VariableAssignmentNode) Marshal() {
 	SetKind(v)
@@ -278,9 +238,7 @@ type VariableListAssignmentNode struct {
 	Value     Node   `json:"value"`
 }
 
-func (*VariableListAssignmentNode) KindName() string {
-	return "variableListAssignment"
-}
+func (*VariableListAssignmentNode) KindName() string { return "variableListAssignment" }
 
 func (v *VariableListAssignmentNode) Marshal() {
 	SetKind(v)
@@ -300,9 +258,7 @@ type VariableDefinitionNode struct {
 	Value    Node        `json:"value"`
 }
 
-func (*VariableDefinitionNode) KindName() string {
-	return "variableDefinition"
-}
+func (*VariableDefinitionNode) KindName() string { return "variableDefinition" }
 
 func (v *VariableDefinitionNode) Marshal() {
 	SetKind(v)
@@ -320,9 +276,7 @@ type VariableListDefinitionNode struct {
 	Value     Node          `json:"value"`
 }
 
-func (*VariableListDefinitionNode) KindName() string {
-	return "variableListDefinition"
-}
+func (*VariableListDefinitionNode) KindName() string { return "variableListDefinition" }
 
 func (v *VariableListDefinitionNode) Marshal() {
 	SetKind(v)
@@ -341,9 +295,7 @@ type VariableDeclarationNode struct {
 	Variables []*SymbolNode `json:"variables"`
 }
 
-func (*VariableDeclarationNode) KindName() string {
-	return "variableDeclaration"
-}
+func (*VariableDeclarationNode) KindName() string { return "variableDeclaration" }
 
 func (v *VariableDeclarationNode) Marshal() {
 	SetKind(v)
@@ -354,4 +306,39 @@ func (v *VariableDeclarationNode) Marshal() {
 
 func (v *VariableDeclarationNode) String() string {
 	return fmt.Sprintf("(var-declaration vars: %v)", v.Variables)
+}
+
+type PublicDefinitionNode struct {
+	NodeTraits
+	Definition Node `json:"definition"` // VariableDefinitionNode or VariableListDefinitionNode
+}
+
+func (*PublicDefinitionNode) KindName() string { return "publicDefinition" }
+
+func (p *PublicDefinitionNode) Marshal() {
+	SetKind(p)
+	p.Definition.Marshal()
+}
+
+func (p *PublicDefinitionNode) String() string {
+	return fmt.Sprintf("(public-definition %v)", p.Definition)
+}
+
+type BlockNode struct {
+	NodeTraits
+	ContextTypeStrings []string `json:"contextTypes"`
+	Statements         []Node   `json:"statements"`
+}
+
+func (*BlockNode) KindName() string { return "block" }
+
+func (b *BlockNode) Marshal() {
+	SetKind(b)
+	for _, statement := range b.Statements {
+		statement.Marshal()
+	}
+}
+
+func (b *BlockNode) String() string {
+	return fmt.Sprintf("(block%v: %v)", b.ContextTypeStrings, b.Statements)
 }

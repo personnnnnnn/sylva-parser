@@ -6,7 +6,7 @@
     "errorStrings": []
   },
   "ast": {
-    "kind": "variableDeclaration",
+    "kind": "block",
     "bounds": {
       "start": {
         "col": 0,
@@ -14,63 +14,83 @@
         "idx": 0
       },
       "end": {
-        "col": 11,
+        "col": 0,
         "ln": 0,
-        "idx": 11
+        "idx": 0
       }
     },
     "errors": [],
-    "variables": [
+    "contextTypes": [
+      "GlobalContext"
+    ],
+    "statements": [
       {
-        "kind": "symbol",
+        "kind": "call",
         "bounds": {
           "start": {
-            "col": 4,
+            "col": 0,
             "ln": 0,
-            "idx": 4
+            "idx": 0
           },
           "end": {
-            "col": 5,
+            "col": 0,
             "ln": 0,
-            "idx": 5
+            "idx": 0
           }
         },
         "errors": [],
-        "symbol": "x"
-      },
-      {
-        "kind": "symbol",
-        "bounds": {
-          "start": {
-            "col": 7,
-            "ln": 0,
-            "idx": 7
+        "function": {
+          "kind": "symbol",
+          "bounds": {
+            "start": {
+              "col": 0,
+              "ln": 0,
+              "idx": 0
+            },
+            "end": {
+              "col": 5,
+              "ln": 0,
+              "idx": 5
+            }
           },
-          "end": {
-            "col": 8,
-            "ln": 0,
-            "idx": 8
-          }
+          "errors": [],
+          "symbol": "print"
         },
-        "errors": [],
-        "symbol": "y"
-      },
-      {
-        "kind": "symbol",
-        "bounds": {
-          "start": {
-            "col": 10,
-            "ln": 0,
-            "idx": 10
+        "arguments": {
+          "kind": "argList",
+          "bounds": {
+            "start": {
+              "col": 0,
+              "ln": 0,
+              "idx": 0
+            },
+            "end": {
+              "col": 0,
+              "ln": 0,
+              "idx": 0
+            }
           },
-          "end": {
-            "col": 11,
-            "ln": 0,
-            "idx": 11
-          }
-        },
-        "errors": [],
-        "symbol": "z"
+          "errors": [],
+          "arguments": [
+            {
+              "kind": "string",
+              "bounds": {
+                "start": {
+                  "col": 6,
+                  "ln": 0,
+                  "idx": 6
+                },
+                "end": {
+                  "col": 20,
+                  "ln": 0,
+                  "idx": 20
+                }
+              },
+              "errors": [],
+              "text": "Hello, World!"
+            }
+          ]
+        }
       }
     ]
   }

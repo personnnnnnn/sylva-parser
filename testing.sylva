@@ -1,1 +1,1 @@
-let x, y, z
+print("Hello, World!")
