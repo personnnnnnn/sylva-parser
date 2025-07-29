@@ -293,3 +293,65 @@ func (v *VariableListAssignmentNode) Marshal() {
 func (v *VariableListAssignmentNode) String() string {
 	return fmt.Sprintf("(var-list-assignment var: %v, value: %v)", v.Variables, v.Value)
 }
+
+type VariableDefinitionNode struct {
+	NodeTraits
+	Variable *SymbolNode `json:"variable"`
+	Value    Node        `json:"value"`
+}
+
+func (*VariableDefinitionNode) KindName() string {
+	return "variableDefinition"
+}
+
+func (v *VariableDefinitionNode) Marshal() {
+	SetKind(v)
+	v.Variable.Marshal()
+	v.Value.Marshal()
+}
+
+func (v *VariableDefinitionNode) String() string {
+	return fmt.Sprintf("(var-definition var: %v, value: %v)", v.Variable, v.Value)
+}
+
+type VariableListDefinitionNode struct {
+	NodeTraits
+	Variables []*SymbolNode `json:"variables"`
+	Value     Node          `json:"value"`
+}
+
+func (*VariableListDefinitionNode) KindName() string {
+	return "variableListDefinition"
+}
+
+func (v *VariableListDefinitionNode) Marshal() {
+	SetKind(v)
+	for _, variable := range v.Variables {
+		variable.Marshal()
+	}
+	v.Value.Marshal()
+}
+
+func (v *VariableListDefinitionNode) String() string {
+	return fmt.Sprintf("(var-list-definition vars: %v, value: %v)", v.Variables, v.Value)
+}
+
+type VariableDeclarationNode struct {
+	NodeTraits
+	Variables []*SymbolNode `json:"variables"`
+}
+
+func (*VariableDeclarationNode) KindName() string {
+	return "variableDeclaration"
+}
+
+func (v *VariableDeclarationNode) Marshal() {
+	SetKind(v)
+	for _, variable := range v.Variables {
+		variable.Marshal()
+	}
+}
+
+func (v *VariableDeclarationNode) String() string {
+	return fmt.Sprintf("(var-declaration vars: %v)", v.Variables)
+}

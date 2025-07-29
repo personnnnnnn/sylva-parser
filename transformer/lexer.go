@@ -383,7 +383,7 @@ func (l *Lexer) Logic() {
 		}
 		// symbols like "ifTrue" would break and be interpreted as (token "if"), (symbol "True")
 		if IsAlphanumeric(token) {
-			return
+			break
 		}
 		l.Token(l.MakeToken(TrivialTokens[token], len(token)))
 		return

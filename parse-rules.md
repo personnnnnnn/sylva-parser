@@ -10,13 +10,14 @@
   **)** **+**
 - `SYMBOL`
 
-## [ ] `statement`
+## [X] `statement`
 
-- [ ] **(** `pub` **)** **?** `let` `SYMBOL` `"="` `expr`
-- [ ] **(** `pub` **)** **?** `let` `SYMBOL` **(** `","` `SYMBOL` **)** **+** `"="` `expr`
-- [x] `variable` `"="` `expr`
-- [x] `variable` **(** `","` `variable` **)** **+** `"="` `expr`
-- [x] `expr`
+- `let` `SYMBOL` `"="` `expr`
+- `let` `SYMBOL` **(** `","` `SYMBOL` **)** **+** `"="` `expr`
+- `let` `SYMBOL` **(** `","` `SYMBOL` **)** **\***
+- `variable` `"="` `expr`
+- `variable` **(** `","` `variable` **)** **+** `"="` `expr`
+- `expr`
 
 ## `expr`
 

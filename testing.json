@@ -6,7 +6,7 @@
     "errorStrings": []
   },
   "ast": {
-    "kind": "variableListAssignment",
+    "kind": "variableDeclaration",
     "bounds": {
       "start": {
         "col": 0,
@@ -14,9 +14,9 @@
         "idx": 0
       },
       "end": {
-        "col": 17,
+        "col": 11,
         "ln": 0,
-        "idx": 17
+        "idx": 11
       }
     },
     "errors": [],
@@ -25,14 +25,14 @@
         "kind": "symbol",
         "bounds": {
           "start": {
-            "col": 0,
+            "col": 4,
             "ln": 0,
-            "idx": 0
+            "idx": 4
           },
           "end": {
-            "col": 1,
+            "col": 5,
             "ln": 0,
-            "idx": 1
+            "idx": 5
           }
         },
         "errors": [],
@@ -42,14 +42,14 @@
         "kind": "symbol",
         "bounds": {
           "start": {
-            "col": 3,
+            "col": 7,
             "ln": 0,
-            "idx": 3
+            "idx": 7
           },
           "end": {
-            "col": 4,
+            "col": 8,
             "ln": 0,
-            "idx": 4
+            "idx": 8
           }
         },
         "errors": [],
@@ -59,36 +59,19 @@
         "kind": "symbol",
         "bounds": {
           "start": {
-            "col": 6,
+            "col": 10,
             "ln": 0,
-            "idx": 6
+            "idx": 10
           },
           "end": {
-            "col": 7,
+            "col": 11,
             "ln": 0,
-            "idx": 7
+            "idx": 11
           }
         },
         "errors": [],
         "symbol": "z"
       }
-    ],
-    "value": {
-      "kind": "symbol",
-      "bounds": {
-        "start": {
-          "col": 10,
-          "ln": 0,
-          "idx": 10
-        },
-        "end": {
-          "col": 17,
-          "ln": 0,
-          "idx": 17
-        }
-      },
-      "errors": [],
-      "symbol": "myArray"
-    }
+    ]
   }
 }
